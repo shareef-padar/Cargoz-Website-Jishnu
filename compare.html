@@ -843,6 +843,167 @@
       margin: 0;
     }
 
+    /* ── PARAM BAR ─────────────────────────────────────────────── */
+    .param-bar {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 0 var(--page-pad) var(--spacing-24);
+    }
+    .param-bar__inner {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-16);
+      flex-wrap: wrap;
+    }
+    .param-bar__label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-400);
+      white-space: nowrap;
+    }
+    .param-chips {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      flex-wrap: wrap;
+    }
+
+    /* Size chip with dropdown */
+    .param-chip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-6);
+      padding: var(--spacing-8) var(--spacing-12);
+      background: var(--color-white);
+      border: 1.5px solid var(--color-text-200);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-800);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .param-chip:hover, .param-chip.is-open {
+      border-color: var(--color-text-400);
+      box-shadow: var(--shadow-sm);
+    }
+    .param-chip__icon { color: var(--color-secondary-600); font-size: 15px; }
+    .param-chip__caret { color: var(--color-text-400); font-size: 12px; transition: transform 0.2s; }
+    .param-chip.is-open .param-chip__caret { transform: rotate(180deg); }
+
+    .param-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--color-white);
+      border: 1px solid var(--color-text-100);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      z-index: 100;
+      overflow: hidden;
+      display: none;
+    }
+    .param-dropdown.is-open { display: block; }
+    .param-dropdown__options {
+      padding: var(--spacing-8);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .param-opt {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-8) var(--spacing-12);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-700);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-family: 'Lato', sans-serif;
+      width: 100%;
+      transition: background 0.1s;
+    }
+    .param-opt:hover { background: var(--color-text-50); }
+    .param-opt.is-active { background: var(--color-text-900); color: var(--color-white); font-weight: 700; }
+    .param-dropdown__divider { height: 1px; background: var(--color-text-100); margin: 0 var(--spacing-8); }
+    .param-dropdown__custom {
+      padding: var(--spacing-8);
+      display: flex;
+      gap: var(--spacing-8);
+    }
+    .param-custom-input {
+      flex: 1;
+      height: 36px;
+      padding: 0 var(--spacing-12);
+      font-size: 14px;
+      font-family: 'Lato', sans-serif;
+      color: var(--color-text-800);
+      background: var(--color-text-50);
+      border: 1.5px solid var(--color-text-200);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .param-custom-input:focus { border-color: var(--color-text-400); background: var(--color-white); }
+    .param-apply-btn {
+      height: 36px;
+      padding: 0 var(--spacing-12);
+      background: var(--color-text-900);
+      color: var(--color-white);
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: 'Lato', sans-serif;
+      transition: opacity 0.15s;
+    }
+    .param-apply-btn:hover { opacity: 0.82; }
+
+    /* Period pills */
+    .period-pills {
+      display: flex;
+      gap: 4px;
+      background: var(--color-text-100);
+      border-radius: var(--radius-md);
+      padding: 4px;
+    }
+    .period-pill {
+      padding: var(--spacing-6) var(--spacing-12);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-500);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: 'Lato', sans-serif;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .period-pill.is-active {
+      background: var(--color-white);
+      color: var(--color-text-900);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Card total line (shows total for N months) */
+    .card-total-line {
+      font-size: 11px;
+      color: var(--color-text-400);
+      font-weight: 500;
+      margin-top: 2px;
+      min-height: 15px;
+      transition: opacity 0.2s;
+    }
+
     /* ── ⑤ MOBILE — horizontal scroll + compact label column ──────── */
     @media (max-width: 900px) {
       :root { --page-pad: 16px; }
@@ -991,6 +1152,45 @@
   </div>
 </div>
 
+<!-- ── PARAMETER BAR ─────────────────────────────────────────── -->
+<div class="param-bar">
+  <div class="param-bar__inner">
+    <span class="param-bar__label">Your requirements</span>
+    <div class="param-chips">
+
+      <!-- Size selector -->
+      <div class="param-chip" id="sizeChip" onclick="toggleSizeDropdown(event)">
+        <i class="ph ph-cube param-chip__icon"></i>
+        <span id="sizeDisplay">500 sqft</span>
+        <i class="ph ph-caret-down param-chip__caret"></i>
+        <div class="param-dropdown" id="sizeDropdown">
+          <div class="param-dropdown__options">
+            <button class="param-opt" data-sqft="250"  onclick="setSqft(250,event)">250 sqft</button>
+            <button class="param-opt is-active" data-sqft="500"  onclick="setSqft(500,event)">500 sqft</button>
+            <button class="param-opt" data-sqft="1000" onclick="setSqft(1000,event)">1,000 sqft</button>
+            <button class="param-opt" data-sqft="2000" onclick="setSqft(2000,event)">2,000 sqft</button>
+            <button class="param-opt" data-sqft="5000" onclick="setSqft(5000,event)">5,000 sqft</button>
+          </div>
+          <div class="param-dropdown__divider"></div>
+          <div class="param-dropdown__custom">
+            <input type="number" class="param-custom-input" id="customSqft" placeholder="Custom sqft" min="100" max="100000">
+            <button class="param-apply-btn" onclick="applyCustomSqft(event)">Apply</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Period tabs -->
+      <div class="period-pills">
+        <button class="period-pill" data-months="1"  onclick="setMonths(1)">1 mo</button>
+        <button class="period-pill is-active" data-months="3"  onclick="setMonths(3)">3 mo</button>
+        <button class="period-pill" data-months="6"  onclick="setMonths(6)">6 mo</button>
+        <button class="period-pill" data-months="12" onclick="setMonths(12)">12 mo</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- Sentinel: when this scrolls out of view, cards go compact -->
 <div id="cardsSentinel" style="height:1px;pointer-events:none;"></div>
 
@@ -1031,6 +1231,7 @@
             <span class="card-price__amount">AED 8,750</span>
             <span class="card-price__period">/month</span>
           </div>
+          <div class="card-total-line"></div>
         </div>
         <div class="card-rating">
           <i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i>
@@ -1070,6 +1271,7 @@
             <span class="card-price__amount">AED 5,200</span>
             <span class="card-price__period">/month</span>
           </div>
+          <div class="card-total-line"></div>
         </div>
         <div class="card-rating">
           <span class="card-rating__count" style="font-style:italic; color:var(--color-text-500);">No reviews yet</span>
@@ -1107,6 +1309,7 @@
             <span class="card-price__amount">AED 14,300</span>
             <span class="card-price__period">/month</span>
           </div>
+          <div class="card-total-line"></div>
         </div>
         <div class="card-rating">
           <i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i>
@@ -1142,15 +1345,15 @@
       <div class="compare-row">
         <div class="compare-cell compare-cell--label compare-cell--label-featured">Total cost estimate</div>
         <div class="compare-cell compare-cell--price col-highlight">
-          <span class="price-big">AED 8,750</span>
+          <span class="price-big" id="tbl-price-1">AED 8,750</span>
           <span class="price-unit">/month</span>
         </div>
         <div class="compare-cell compare-cell--price">
-          <span class="price-big">AED 5,200</span>
+          <span class="price-big" id="tbl-price-2">AED 5,200</span>
           <span class="price-unit">/month</span>
         </div>
         <div class="compare-cell compare-cell--price">
-          <span class="price-big">AED 14,300</span>
+          <span class="price-big" id="tbl-price-3">AED 14,300</span>
           <span class="price-unit">/month</span>
         </div>
       </div>
@@ -1249,17 +1452,17 @@
       <!-- Storage quantity -->
       <div class="compare-row identical">
         <div class="compare-cell compare-cell--label">Your storage quantity</div>
-        <div class="compare-cell col-highlight">5,080 sqft</div>
-        <div class="compare-cell">5,080 sqft</div>
-        <div class="compare-cell">5,080 sqft</div>
+        <div class="compare-cell col-highlight" id="tbl-sqft-1">500 sqft</div>
+        <div class="compare-cell" id="tbl-sqft-2">500 sqft</div>
+        <div class="compare-cell" id="tbl-sqft-3">500 sqft</div>
       </div>
 
       <!-- Storage cost -->
       <div class="compare-row">
         <div class="compare-cell compare-cell--label">Storage cost only</div>
-        <div class="compare-cell col-highlight">AED 8,100</div>
-        <div class="compare-cell">AED 4,800</div>
-        <div class="compare-cell">AED 12,500</div>
+        <div class="compare-cell col-highlight" id="tbl-storage-1">AED 8,100</div>
+        <div class="compare-cell" id="tbl-storage-2">AED 4,800</div>
+        <div class="compare-cell" id="tbl-storage-3">AED 12,500</div>
       </div>
 
       <!-- Handling cost -->
@@ -1949,6 +2152,100 @@
     document.getElementById('btnShowDiff').style.fontWeight = '600';
     document.getElementById('btnShowAll').style.fontWeight = '400';
   }
+
+  // ── PARAMETERS: Size & Period ─────────────────────────────────
+  const WH_BASE = {
+    1: { monthly: 8750,  storage: 8100  },
+    2: { monthly: 5200,  storage: 4800  },
+    3: { monthly: 14300, storage: 12500 },
+  };
+  const BASE_SQFT = 500;
+  let currentSqft   = 500;
+  let currentMonths = 3;
+
+  function fmtAED(n) {
+    return 'AED ' + Math.round(n).toLocaleString('en-AE');
+  }
+
+  function recalcPrices() {
+    const ratio = currentSqft / BASE_SQFT;
+    [1, 2, 3].forEach(wh => {
+      const monthly = WH_BASE[wh].monthly  * ratio;
+      const storage = WH_BASE[wh].storage  * ratio;
+      const total   = monthly * currentMonths;
+
+      // Card price amount
+      const card = document.querySelector(`[data-wh="${wh}"]`);
+      if (card) {
+        card.querySelector('.card-price__amount').textContent = fmtAED(monthly);
+        const totalLine = card.querySelector('.card-total-line');
+        if (totalLine) totalLine.textContent = currentMonths > 1
+          ? `Total ${fmtAED(total)} for ${currentMonths} months`
+          : '';
+      }
+
+      // Table: quick comparison price
+      const pEl = document.getElementById(`tbl-price-${wh}`);
+      if (pEl) pEl.textContent = fmtAED(monthly);
+
+      // Table: storage quantity
+      const qEl = document.getElementById(`tbl-sqft-${wh}`);
+      if (qEl) qEl.textContent = currentSqft.toLocaleString() + ' sqft';
+
+      // Table: storage cost
+      const sEl = document.getElementById(`tbl-storage-${wh}`);
+      if (sEl) sEl.textContent = fmtAED(storage);
+    });
+  }
+
+  function setSqft(val, e) {
+    if (e) e.stopPropagation();
+    currentSqft = val;
+    document.getElementById('sizeDisplay').textContent = val.toLocaleString() + ' sqft';
+    document.querySelectorAll('.param-opt').forEach(b =>
+      b.classList.toggle('is-active', +b.dataset.sqft === val)
+    );
+    closeSizeDropdown();
+    recalcPrices();
+  }
+
+  function applyCustomSqft(e) {
+    if (e) e.stopPropagation();
+    const val = parseInt(document.getElementById('customSqft').value, 10);
+    if (!val || val < 100) return;
+    currentSqft = val;
+    document.getElementById('sizeDisplay').textContent = val.toLocaleString() + ' sqft';
+    document.querySelectorAll('.param-opt').forEach(b => b.classList.remove('is-active'));
+    closeSizeDropdown();
+    recalcPrices();
+  }
+
+  function setMonths(months) {
+    currentMonths = months;
+    document.querySelectorAll('.period-pill').forEach(b =>
+      b.classList.toggle('is-active', +b.dataset.months === months)
+    );
+    recalcPrices();
+  }
+
+  function toggleSizeDropdown(e) {
+    e.stopPropagation();
+    const chip = document.getElementById('sizeChip');
+    const dd   = document.getElementById('sizeDropdown');
+    const open = dd.classList.contains('is-open');
+    closeSizeDropdown();
+    if (!open) { dd.classList.add('is-open'); chip.classList.add('is-open'); }
+  }
+
+  function closeSizeDropdown() {
+    document.getElementById('sizeDropdown').classList.remove('is-open');
+    document.getElementById('sizeChip').classList.remove('is-open');
+  }
+
+  document.addEventListener('click', () => closeSizeDropdown());
+
+  // Run once on load to set initial total line for 3 months
+  recalcPrices();
 </script>
 
 </body>
