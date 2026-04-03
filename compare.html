@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compare Warehouses — Cargoz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    /* ── compare.html — page-specific styles only ────────────────── */
+
+    body { min-width: 1024px; }
+
+    /* ── WAREHOUSE CARDS STICKY ROW ──────────────────────────────── */
+    .cards-sticky-wrapper {
+      position: sticky;
+      top: var(--spacing-64);
+      z-index: 100;
+      background: var(--color-text-50);
+      padding: var(--spacing-16) 0;
+      border-bottom: 1px solid var(--color-text-200);
+    }
+
+    .cards-sticky-wrapper.is-stuck {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    /* ── COMPACT MODE (scroll-collapsed) ──────────────────────────── */
+
+    /* Transition the wrapper itself */
+    .cards-sticky-wrapper {
+      transition: padding 0.28s ease, box-shadow 0.28s ease;
+    }
+
+    .cards-sticky-wrapper.is-compact {
+      padding: var(--spacing-8) 0;
+      border-bottom: 1px solid var(--color-text-100);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .cards-sticky-wrapper.is-compact .cards-row {
+      align-items: center;
+    }
+
+    /* Card shell — border-radius/shadow only; opacity animated by GSAP */
+    .warehouse-card {
+      transition: border-radius 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .warehouse-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Compact card shell */
+    .cards-sticky-wrapper.is-compact .warehouse-card {
+      border-radius: 10px;
+    }
+
+    /* card-image: no individual transition — whole-card fade handles the switch */
+    .card-image {
+      overflow: hidden;
+    }
+
+    .cards-sticky-wrapper.is-compact .card-image {
+      display: none;
+    }
+
+    /* Elements hidden in compact */
+    .cards-sticky-wrapper.is-compact .card-location,
+    .cards-sticky-wrapper.is-compact .card-rating,
+    .cards-sticky-wrapper.is-compact .btn--ghost-sm,
+    .cards-sticky-wrapper.is-compact .card-badge-compact {
+      display: none;
+    }
+
+
+    /* Card body: meta left, button right */
+    .cards-sticky-wrapper.is-compact .card-body {
+      padding: var(--spacing-8) var(--spacing-12);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-8);
+    }
+
+    /* Meta: name above price, stacked */
+    .cards-sticky-wrapper.is-compact .card-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .cards-sticky-wrapper.is-compact .card-name {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cards-sticky-wrapper.is-compact .card-price {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      gap: 2px;
+      margin-top: 0;
+    }
+
+    .cards-sticky-wrapper.is-compact .card-price__amount {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .cards-sticky-wrapper.is-compact .card-price__period {
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* Button stays compact */
+    .cards-sticky-wrapper.is-compact .card-actions {
+      margin-top: 0;
+      flex-shrink: 0;
+    }
+
+    /* Badge (hidden in compact, defined for potential future use) */
+    .card-badge-compact {
+      display: none;
+    }
+
+    .cards-row {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 0 var(--page-pad);
+      display: grid;
+      grid-template-columns: 256px repeat(var(--wh-cols, 3), 1fr);
+      gap: var(--spacing-32);
+      align-items: start;
+    }
+
+    .cards-row__label-spacer {
+      /* empty cell to align with table label column */
+    }
+
+    .warehouse-card {
+      background: var(--color-white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      width: 256px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    /* ② Best Value card — elevated shadow only, no color ring */
+    .warehouse-card--highlight {
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Best Value column — no tint, badge on card is sufficient */
+    .col-highlight { }
+
+    .card-image {
+      height: 146px;
+      background: var(--color-text-200);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-6);
+      padding: var(--spacing-4) var(--spacing-8);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+
+    /* Best Value → green (positive signal) */
+    .card-badge--best-value {
+      background: var(--color-green-600);
+      color: var(--color-white);
+      border-color: var(--color-green-600);
+    }
+
+    /* Cheapest → neutral */
+    .card-badge--cheapest {
+      background: var(--color-text-50);
+      color: var(--color-text-700);
+      border-color: var(--color-text-200);
+    }
+
+    /* Most rated → amber */
+    .card-badge--most-rated {
+      background: var(--color-orange-50);
+      color: var(--color-orange-900);
+      border-color: var(--color-orange-100);
+    }
+
+    .card-badge--available {
+      background: var(--color-green-50);
+      color: var(--color-green-900);
+      border-color: var(--color-green-100);
+    }
+
+    .card-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+
+    .card-close:hover { background: rgba(0,0,0,0.6); }
+
+    /* Image dot indicator */
+    .card-dots {
+      position: absolute;
+      bottom: var(--spacing-8);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--spacing-4);
+    }
+
+    .card-dots__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+    }
+
+    .card-dots__dot--active { background: white; }
+
+    .card-body {
+      padding: var(--spacing-16) var(--spacing-12);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-meta { display: flex; flex-direction: column; gap: var(--spacing-6); }
+
+    .card-name {
+      font-weight: 700;
+      font-size: 17px;
+      line-height: 26px;
+      color: var(--color-text-800);
+    }
+
+    .card-location {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      font-size: 14px;
+      color: var(--color-text-800);
+    }
+
+    .card-location svg { flex-shrink: 0; color: var(--color-text-500); }
+
+    .card-price {
+      display: flex;
+      align-items: baseline;
+      gap: var(--spacing-4);
+    }
+
+    .card-price__amount {
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 28px;
+      color: var(--color-text-800);
+    }
+
+    .card-price__period {
+      font-size: 12px;
+      color: var(--color-text-400);
+      line-height: 1.4;
+    }
+
+    .card-rating {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      font-size: 14px;
+    }
+
+    .card-rating__stars { color: #FACC15; font-size: 13px; }
+    .card-rating__score { font-weight: 700; font-size: 14px; color: var(--color-text-800); }
+    .card-rating__count { font-size: 12px; color: var(--color-text-500); }
+
+    .card-actions {
+      display: flex;
+      gap: var(--spacing-8);
+      align-items: center;
+      padding-top: var(--spacing-4);
+    }
+
+    .card-actions .btn { flex: 1; }
+
+    /* ── TABLE AREA ──────────────────────────────────────────────── */
+    .table-area {
+      padding: var(--spacing-32) 0 var(--spacing-80);
+    }
+
+    .table-area__inner {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 0 var(--page-pad);
+    }
+
+    /* Toggle pill */
+    .toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      background: var(--color-text-100);
+      border: 1px solid var(--color-text-100);
+      border-radius: 20px;
+      padding: var(--spacing-4);
+      margin-bottom: var(--spacing-32);
+    }
+
+    .toggle-pill__opt {
+      display: flex;
+      align-items: center;
+      padding: 7px var(--spacing-16);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      border: none;
+      background: transparent;
+      color: var(--color-text-500);
+    }
+
+    .toggle-pill__opt--active {
+      background: var(--color-white);
+      border: 0.5px solid var(--color-text-100);
+      color: var(--color-text-900);
+      font-weight: 600;
+    }
+
+    /* Section block */
+    .compare-section {
+      margin-bottom: var(--spacing-40);
+    }
+
+    .compare-section__title {
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 28px;
+      color: var(--color-text-800);
+      margin-bottom: var(--spacing-8);
+      padding: 0;
+    }
+
+    /* Quick comparison has a header row (no label, just WH names) */
+    .compare-section--quick .compare-section__title {
+      margin-bottom: 0;
+    }
+
+    /* Table rows */
+    .compare-table { width: 100%; }
+
+    /* Header row (warehouse names in table) - hidden since we use sticky cards */
+    .compare-row {
+      display: grid;
+      grid-template-columns: 256px repeat(var(--wh-cols, 3), 1fr);
+      gap: var(--spacing-32);
+      border-bottom: 1px solid var(--color-text-200);
+      transition: background 0.12s ease;
+    }
+
+    .compare-row:last-child { border-bottom: none; }
+
+    /* ① Row hover — one step darker than page bg so it's actually visible */
+    .compare-row:not(.section-score-row):hover {
+      background: var(--color-text-100);
+      cursor: default;
+    }
+
+    .compare-row--section-header {
+      background: var(--color-text-50);
+      border-radius: 8px;
+      border-bottom: 1px solid var(--color-text-200);
+    }
+
+    .compare-row--alt {
+      background: rgba(249,250,252,0.5);
+    }
+
+    .compare-table__row:nth-child(even) {
+      background: var(--color-text-25);
+    }
+
+    .compare-cell {
+      padding: var(--spacing-12) var(--spacing-8);
+      font-size: 16px;
+      line-height: 24px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+    }
+
+    .compare-cell--label {
+      color: var(--color-text-800);
+      font-size: 16px;
+    }
+
+    .compare-cell--sub {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-2);
+    }
+
+    .compare-cell--sub .sub-label {
+      font-size: 14px;
+      color: var(--color-text-500);
+      letter-spacing: 0.25px;
+      line-height: 20px;
+    }
+
+    .compare-cell--value {
+      color: var(--color-text-800);
+    }
+
+    /* ④ Progressive typography — featured rows (total cost, key decisions) */
+    .compare-cell--label-featured {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text-900);
+      letter-spacing: 0.2px;
+    }
+
+    .compare-cell--price {
+      align-items: baseline;
+      gap: var(--spacing-4);
+    }
+
+    .price-big {
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 28px;
+      color: var(--color-text-800);
+    }
+
+    .price-unit {
+      font-size: 12px;
+      color: var(--color-text-400);
+    }
+
+    /* Badges inline */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: var(--spacing-4) var(--spacing-8);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid;
+      white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    .badge--green {
+      background: var(--color-green-50);
+      color: var(--color-green-900);
+      border-color: var(--color-green-100);
+    }
+
+    .badge--orange {
+      background: var(--color-orange-50);
+      color: var(--color-orange-900);
+      border-color: var(--color-orange-100);
+    }
+
+    .badge--pending {
+      background: var(--color-white);
+      color: var(--color-text-900);
+      border-color: var(--color-text-100);
+    }
+
+    /* Rating inline */
+    .rating-inline {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+
+    .rating-inline__top {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      font-size: 16px;
+      line-height: 24px;
+    }
+
+    .rating-inline__star { color: #FACC15; font-size: 14px; }
+    .rating-inline__score { font-weight: 600; color: var(--color-text-800); }
+    .rating-inline__count {
+      font-size: 13px;
+      color: var(--color-text-500);
+      letter-spacing: 0.25px;
+    }
+
+    /* ── SECTION SCORE PILLS ────────────────────────────────────── */
+    .score-cell {
+      display: flex;
+      align-items: center;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      padding: var(--spacing-4) var(--spacing-12);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    /* Full (100%) — strong green, slightly larger */
+    .score-pill--full {
+      background: var(--color-green-100);
+      color: var(--color-green-900);
+      font-size: 14px;
+      font-weight: 700;
+      padding: var(--spacing-4) var(--spacing-12);
+    }
+
+    /* Partial (≥70%) — amber warning */
+    .score-pill--partial {
+      background: var(--color-orange-50);
+      color: var(--color-orange-900);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Low (<70%) — red alert */
+    .score-pill--low {
+      background: var(--color-red-50);
+      color: var(--color-red-500);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Winner pill — section's top scorer gets a subtle crown */
+    .score-pill--winner::after {
+      content: ' ★';
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+    /* Section header row: title (label cell) + score pills (data cells) — single row, no gap */
+    .section-score-row {
+      background: var(--color-text-50);
+      border-bottom: none;
+      padding: var(--spacing-24) 0 10px;
+      align-items: center;
+    }
+
+    .section-score-row .compare-cell--label {
+      display: flex;
+      align-items: center;
+    }
+
+    .section-score-row .compare-section__title {
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 28px;
+      color: var(--color-text-800);
+      margin: 0;
+    }
+
+    .section-score-row .score-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Checkmark / not available */
+    .check {
+      color: var(--color-green-600);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .not-available {
+      color: var(--color-text-400);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+
+    /* ── FOOTER ──────────────────────────────────────────────────── */
+    .footer {
+      background: var(--color-text-900);
+      color: rgba(255,255,255,0.75);
+      padding: 56px 0 0;
+    }
+
+    .footer__inner {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 0 var(--page-pad);
+    }
+
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 1fr 1fr;
+      gap: var(--spacing-48);
+      padding-bottom: var(--spacing-48);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer__brand { display: flex; flex-direction: column; gap: var(--spacing-20); }
+
+    .footer__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-8);
+      text-decoration: none;
+    }
+
+    .footer__logo-mark {
+      width: 36px;
+      height: 36px;
+      background: var(--color-text-700);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer__logo-text {
+      font-family: 'Gilroy', 'Lato', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--color-white);
+    }
+
+    .footer__tagline {
+      font-size: 14px;
+      line-height: 22px;
+      color: rgba(255,255,255,0.6);
+      max-width: 240px;
+    }
+
+    .footer__contact {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-8);
+    }
+
+    .footer__contact-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-8);
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer__contact-item:hover { color: var(--color-white); }
+
+    .footer__social {
+      display: flex;
+      gap: 10px;
+      margin-top: var(--spacing-4);
+    }
+
+    .footer__social-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background 0.15s;
+    }
+
+    .footer__social-icon:hover { background: rgba(255,255,255,0.25); }
+
+    .footer__col { display: flex; flex-direction: column; gap: var(--spacing-4); }
+
+    .footer__col-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: var(--spacing-12);
+    }
+
+    .footer__col-link {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      padding: var(--spacing-4) 0;
+      transition: color 0.15s;
+    }
+
+    .footer__col-link:hover { color: var(--color-white); }
+
+    .footer__bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-20) 0;
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .footer__bottom-links {
+      display: flex;
+      gap: var(--spacing-24);
+    }
+
+    .footer__bottom-links a {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer__bottom-links a:hover { color: rgba(255,255,255,0.8); }
+
+    /* ── PLACEHOLDER WAREHOUSE IMAGES ───────────────────────────── */
+    .card-image--wh1 { background: linear-gradient(140deg, #1e2b3c 0%, #2d3f56 55%, #374d68 100%); }
+    .card-image--wh2 { background: linear-gradient(140deg, #1e2b3c 0%, #2d3f56 55%, #374d68 100%); }
+    .card-image--wh3 { background: linear-gradient(140deg, #1e2b3c 0%, #2d3f56 55%, #374d68 100%); }
+
+    .card-image__placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-image__placeholder svg { opacity: 0.35; }
+    .card-image__placeholder span {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* ── SECTION HEADER ROW in table (non-scored sections) ──────────── */
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      padding: var(--spacing-24) 0 10px;
+      border-top: 1px solid var(--color-text-200);
+    }
+
+    .section-title-row:first-of-type { border-top: none; }
+
+    /* ── DIFFERENCES TOGGLE BEHAVIOR ────────────────────────────── */
+    .compare-row.identical { /* shown by default */ }
+    .compare-row.identical.hide-identical { display: none; }
+
+    /* ── EMPTY STATE ────────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-80) var(--spacing-24);
+      text-align: center;
+      gap: var(--spacing-16);
+    }
+
+    .empty-state__icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
+      background: var(--color-text-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-400);
+      font-size: 36px;
+      margin-bottom: var(--spacing-8);
+    }
+
+    .empty-state__title {
+      font-family: 'Gilroy', 'Lato', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--color-text-800);
+      margin: 0;
+    }
+
+    .empty-state__subtitle {
+      font-size: 15px;
+      color: var(--color-text-500);
+      max-width: 360px;
+      line-height: 22px;
+      margin: 0;
+    }
+
+    /* ── ⑤ MOBILE — horizontal scroll + compact label column ──────── */
+    @media (max-width: 900px) {
+      :root { --page-pad: 16px; }
+
+      /* Navbar: hide links, keep logo + CTA */
+      .navbar__nav { display: none; }
+      .navbar__inner { padding: 0 var(--page-pad); }
+
+      /* Page header: stack vertically */
+      .page-header__row { flex-direction: column; gap: var(--spacing-12); }
+      .page-header__row .btn { align-self: flex-start; }
+      .page-header__title { font-size: 24px; line-height: 32px; }
+
+      /* Make the whole compare area horizontally scrollable */
+      .table-area { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .table-area__inner { min-width: 680px; padding: 0 var(--page-pad) var(--spacing-48); }
+
+      /* Cards row scrolls with table */
+      .cards-sticky-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .cards-row {
+        min-width: 680px;
+        padding: var(--spacing-16) var(--page-pad);
+      }
+
+      /* Tighten column widths on small screens */
+      .compare-row {
+        grid-template-columns: 160px repeat(var(--wh-cols, 3), 1fr);
+        gap: var(--spacing-16);
+      }
+
+      .compare-cell--label { font-size: 14px; }
+      .compare-cell { font-size: 14px; padding: var(--spacing-8) var(--spacing-4); }
+
+      /* Footer: 2-col grid */
+      .footer__grid { grid-template-columns: 1fr 1fr; gap: var(--spacing-24); }
+      .footer__bottom { flex-direction: column; gap: var(--spacing-8); text-align: center; }
+      .footer__bottom-links { flex-wrap: wrap; justify-content: center; }
+    }
+
+    @media (max-width: 480px) {
+      .page-header__title { font-size: 20px; }
+      .table-area__inner { min-width: 560px; }
+      .cards-row { min-width: 560px; }
+      .compare-row { grid-template-columns: 130px repeat(var(--wh-cols, 3), 1fr); gap: var(--spacing-12); }
+      .footer__grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARD NAME CODE SUBTITLE ──────────────────────────────── */
+    .card-name-code {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-400);
+      letter-spacing: 0.5px;
+      line-height: 1.4;
+    }
+
+    /* ── DRAWER CARD LAYERING ──────────────────────────────────── */
+    .drawer .form-card { border: none; box-shadow: none; padding: var(--spacing-24); }
+    .drawer .call-card { background: var(--color-text-50); }
+
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════════════════ -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="navbar__inner">
+    <!-- Logo -->
+    <a href="/" class="navbar__logo" aria-label="Cargoz home">
+      <div class="navbar__logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 14L10 4L17 14H3Z" fill="white" opacity="0.9"/>
+          <path d="M6 14H14V17H6V14Z" fill="white"/>
+        </svg>
+      </div>
+      <span class="navbar__logo-text">Cargoz</span>
+    </a>
+
+    <!-- Nav links -->
+    <nav class="navbar__nav">
+      <a href="#" class="navbar__link">Services</a>
+      <a href="#" class="navbar__link">Location</a>
+      <a href="#" class="navbar__link">How Cargoz Helps</a>
+      <a href="#" class="navbar__link">Blog</a>
+      <a href="#" class="navbar__link">Login</a>
+    </nav>
+
+    <!-- CTA -->
+    <div class="navbar__actions">
+      <a href="#" class="btn btn--primary">Book a Warehouse</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PROGRESS STEPPER
+═══════════════════════════════════════════════════════════════ -->
+<div class="stepper" role="navigation" aria-label="Booking progress">
+  <div class="stepper__inner">
+
+    <!-- Step 1: Find Warehouses (done) -->
+    <div class="step step--done">
+      <div class="step__circle"></div>
+      <span class="step__label">Find Warehouses</span>
+    </div>
+
+    <div class="step__connector step__connector--done"></div>
+
+    <!-- Step 2: Customise Estimate (active — user is here) -->
+    <div class="step step--active">
+      <div class="step__circle"><span>2</span></div>
+      <span class="step__label">Customise Estimate</span>
+    </div>
+
+    <div class="step__connector"></div>
+
+    <!-- Step 3: Get Your Estimate (pending) -->
+    <div class="step">
+      <div class="step__circle"><span>3</span></div>
+      <span class="step__label">Get Your Estimate</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════════════════════════════ -->
+<div class="page-header">
+  <div class="page-header__inner">
+    <a href="#" class="back-link">
+      <i class="ph ph-arrow-left" style="font-size: 16px;"></i>
+      Go back
+    </a>
+    <div class="page-header__row">
+      <div class="page-header__titles">
+        <h1 class="page-header__title">Compare warehouses</h1>
+        <p class="page-header__subtitle">Comparing 3 warehouses &middot; WH-001 &middot; WH-002 &middot; WH-003 &middot; Dubai</p>
+      </div>
+      <button onclick="openDrawer('comparison')" class="btn btn--primary" style="margin-top:4px; font-size:14px; padding:10px 20px; height:40px; border-radius:16px;">
+        Get Comparison Estimate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sentinel: when this scrolls out of view, cards go compact -->
+<div id="cardsSentinel" style="height:1px;pointer-events:none;"></div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     WAREHOUSE CARDS (sticky row)
+═══════════════════════════════════════════════════════════════ -->
+<div class="cards-sticky-wrapper" id="cardsRow">
+  <div class="cards-row">
+
+    <!-- Spacer column to align with table label column -->
+    <div class="cards-row__label-spacer"></div>
+
+    <!-- Card 1: WH-001 Al Quoz (Best Value) -->
+    <div class="warehouse-card warehouse-card--highlight" data-wh="1">
+      <div class="card-image card-image--wh1">
+        <img src="Warehouse%20Image/2152005466.jpg" alt="WH-001 Warehouse">
+        <span class="card-badge card-badge--best-value">
+          ★ Best Value
+        </span>
+        <button type="button" class="card-close" onclick="removeCard(1)" aria-label="Remove WH-001">
+          <i class="ph-bold ph-x" style="font-size: 10px; color: white;"></i>
+        </button>
+        <div class="card-dots">
+          <div class="card-dots__dot card-dots__dot--active"></div>
+          <div class="card-dots__dot"></div>
+          <div class="card-dots__dot"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <span class="card-badge-compact card-badge-compact--best-value">★ Best Value</span>
+        <div class="card-meta">
+          <div class="card-name">WH-001</div>
+          <div class="card-location">
+            <i class="ph-fill ph-map-pin" style="font-size: 14px; color: var(--color-text-400);"></i>
+            Al Quoz, Dubai
+          </div>
+          <div class="card-price">
+            <span class="card-price__amount">AED 8,750</span>
+            <span class="card-price__period">/month</span>
+          </div>
+        </div>
+        <div class="card-rating">
+          <i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i>
+          <span class="card-rating__score">4.8</span>
+          <span class="card-rating__count">(312 reviews)</span>
+        </div>
+        <div class="card-actions">
+          <button onclick="openDrawer('single')" class="btn btn--outline">Get Estimate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: WH-002 DIP (Cheapest) -->
+    <div class="warehouse-card" data-wh="2">
+      <div class="card-image card-image--wh2">
+        <img src="Warehouse%20Image/74079.jpg" alt="WH-002 Warehouse">
+        <span class="card-badge card-badge--cheapest">
+          Cheapest
+        </span>
+        <button type="button" class="card-close" onclick="removeCard(2)" aria-label="Remove WH-002">
+          <i class="ph-bold ph-x" style="font-size: 10px; color: white;"></i>
+        </button>
+        <div class="card-dots">
+          <div class="card-dots__dot card-dots__dot--active"></div>
+          <div class="card-dots__dot"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <span class="card-badge-compact card-badge-compact--cheapest">Cheapest</span>
+        <div class="card-meta">
+          <div class="card-name">WH-002</div>
+          <div class="card-location">
+            <i class="ph-fill ph-map-pin" style="font-size: 14px; color: var(--color-text-400);"></i>
+            DIP, Dubai
+          </div>
+          <div class="card-price">
+            <span class="card-price__amount">AED 5,200</span>
+            <span class="card-price__period">/month</span>
+          </div>
+        </div>
+        <div class="card-rating">
+          <span class="card-rating__count" style="font-style:italic; color:var(--color-text-500);">No reviews yet</span>
+        </div>
+        <div class="card-actions">
+          <button onclick="openDrawer('single')" class="btn btn--outline">Get Estimate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: WH-003 JAFZA (Most Rated) -->
+    <div class="warehouse-card" data-wh="3">
+      <div class="card-image card-image--wh3">
+        <img src="Warehouse%20Image/83418.jpg" alt="WH-003 Warehouse">
+        <span class="card-badge card-badge--most-rated">
+          ★ Most rated
+        </span>
+        <button type="button" class="card-close" onclick="removeCard(3)" aria-label="Remove WH-003">
+          <i class="ph-bold ph-x" style="font-size: 10px; color: white;"></i>
+        </button>
+        <div class="card-dots">
+          <div class="card-dots__dot card-dots__dot--active"></div>
+          <div class="card-dots__dot"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <span class="card-badge-compact card-badge-compact--most-rated">★ Most rated</span>
+        <div class="card-meta">
+          <div class="card-name">WH-003</div>
+          <div class="card-location">
+            <i class="ph-fill ph-map-pin" style="font-size: 14px; color: var(--color-text-400);"></i>
+            JAFZA, Dubai
+          </div>
+          <div class="card-price">
+            <span class="card-price__amount">AED 14,300</span>
+            <span class="card-price__period">/month</span>
+          </div>
+        </div>
+        <div class="card-rating">
+          <i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i><i class="ph-fill ph-star" style="color: #FACC15; font-size: 14px;"></i>
+          <span class="card-rating__score">4.9</span>
+          <span class="card-rating__count">(589 reviews)</span>
+        </div>
+        <div class="card-actions">
+          <button onclick="openDrawer('single')" class="btn btn--outline">Get Estimate</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cards-row -->
+</div><!-- /cards-sticky-wrapper -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     COMPARISON TABLE
+═══════════════════════════════════════════════════════════════ -->
+<div class="table-area">
+  <div class="table-area__inner">
+
+    <!-- Toggle pill -->
+    <div class="toggle-pill" role="group" aria-label="Display filter">
+      <button class="toggle-pill__opt toggle-pill__opt--active" id="btnShowAll" onclick="showAll()">Show all</button>
+      <button class="toggle-pill__opt" id="btnShowDiff" onclick="showDiffs()">Show differences only</button>
+    </div>
+
+    <!-- ── QUICK COMPARISON ───────────────────────────────────── -->
+    <div class="compare-section compare-section--quick">
+      <p class="compare-section__title" style="padding-bottom:10px;">Quick comparison</p>
+
+      <!-- Total cost estimate -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--label-featured">Total cost estimate</div>
+        <div class="compare-cell compare-cell--price col-highlight">
+          <span class="price-big">AED 8,750</span>
+          <span class="price-unit">/month</span>
+        </div>
+        <div class="compare-cell compare-cell--price">
+          <span class="price-big">AED 5,200</span>
+          <span class="price-unit">/month</span>
+        </div>
+        <div class="compare-cell compare-cell--price">
+          <span class="price-big">AED 14,300</span>
+          <span class="price-unit">/month</span>
+        </div>
+      </div>
+
+      <!-- When can you move in? -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--label-featured">When can you move in?</div>
+        <div class="compare-cell col-highlight">
+          <span class="badge badge--green">
+            <i class="ph-bold ph-check" style="font-size: 12px; color: #004B2F;"></i>
+            Immediate
+          </span>
+        </div>
+        <div class="compare-cell">
+          <span class="badge badge--orange">11 Nov 2026</span>
+        </div>
+        <div class="compare-cell">
+          <span class="badge badge--orange">25 Apr 2026</span>
+        </div>
+      </div>
+
+      <!-- Customer rating -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--label-featured">Customer rating</div>
+        <div class="compare-cell col-highlight">
+          <div class="rating-inline">
+            <div class="rating-inline__top">
+              <span class="rating-inline__star">★</span>
+              <span class="rating-inline__score">4.8</span>
+            </div>
+            <span class="rating-inline__count">312 reviews</span>
+          </div>
+        </div>
+        <div class="compare-cell">
+          <span style="font-size:14px; color:var(--color-text-500); font-style:italic;">No reviews yet</span>
+        </div>
+        <div class="compare-cell">
+          <div class="rating-inline">
+            <div class="rating-inline__top">
+              <span class="rating-inline__star">★</span>
+              <span class="rating-inline__score">4.9</span>
+            </div>
+            <span class="rating-inline__count">589 reviews</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price per unit -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Price per unit</div>
+        <div class="compare-cell col-highlight">AED 10 / CBM / mo</div>
+        <div class="compare-cell">AED 2.5 / sqft / mo</div>
+        <div class="compare-cell">AED 45 / pallet / mo</div>
+      </div>
+
+      <!-- Who manages your goods -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--sub">
+          Who manages your goods?
+        </div>
+        <div class="compare-cell col-highlight">Warehouse handles everything</div>
+        <div class="compare-cell">Warehouse handles everything</div>
+        <div class="compare-cell">You manage your own operations</div>
+      </div>
+
+      <!-- Cargoz verification -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Cargoz verification</div>
+        <div class="compare-cell col-highlight">
+          <span class="badge badge--green">
+            <i class="ph-bold ph-check" style="font-size: 12px; color: #004B2F;"></i>
+            Verified
+          </span>
+        </div>
+        <div class="compare-cell">
+          <span class="badge badge--pending">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v4l2.5 2.5" stroke="#0F172B" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="6" r="4.5" stroke="#0F172B" stroke-width="1.2"/></svg>
+            Pending
+          </span>
+        </div>
+        <div class="compare-cell">
+          <span class="badge badge--green">
+            <i class="ph-bold ph-check" style="font-size: 12px; color: #004B2F;"></i>
+            Verified
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COST BREAKDOWN ─────────────────────────────────────── -->
+    <div class="compare-section">
+      <div class="section-title-row">
+        <p class="compare-section__title">Cost breakdown</p>
+      </div>
+
+      <!-- Storage quantity -->
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Your storage quantity</div>
+        <div class="compare-cell col-highlight">5,080 sqft</div>
+        <div class="compare-cell">5,080 sqft</div>
+        <div class="compare-cell">5,080 sqft</div>
+      </div>
+
+      <!-- Storage cost -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Storage cost only</div>
+        <div class="compare-cell col-highlight">AED 8,100</div>
+        <div class="compare-cell">AED 4,800</div>
+        <div class="compare-cell">AED 12,500</div>
+      </div>
+
+      <!-- Handling cost -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--sub">
+          <span>Handling cost</span>
+          <span class="sub-label">Moving goods in and out</span>
+        </div>
+        <div class="compare-cell col-highlight">AED 15 / CBM</div>
+        <div class="compare-cell">AED 8 / CBM</div>
+        <div class="compare-cell">AED 22 / CBM</div>
+      </div>
+    </div>
+
+    <!-- ── ABOUT THE WAREHOUSE ────────────────────────────────── -->
+    <div class="compare-section">
+      <div class="section-title-row">
+        <p class="compare-section__title">About the warehouse</p>
+      </div>
+
+      <!-- Total size -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Total warehouse size</div>
+        <div class="compare-cell col-highlight">22,308 sqft</div>
+        <div class="compare-cell">8,500 sqft</div>
+        <div class="compare-cell">45,000 sqft</div>
+      </div>
+
+      <!-- Ceiling height -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--sub">
+          <span>Ceiling height</span>
+          <span class="sub-label">How high you can stack goods</span>
+        </div>
+        <div class="compare-cell col-highlight">8m (6.8m usable)</div>
+        <div class="compare-cell">6m (5.2m usable)</div>
+        <div class="compare-cell">12m (10.5m usable)</div>
+      </div>
+
+      <!-- Loading door size -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label compare-cell--sub">
+          <span>Loading door size</span>
+          <span class="sub-label">Can your trucks fit through?</span>
+        </div>
+        <div class="compare-cell col-highlight">4m &times; 4m</div>
+        <div class="compare-cell">3.5m &times; 3.5m</div>
+        <div class="compare-cell">5m &times; 5m</div>
+      </div>
+    </div>
+
+    <!-- ── WHAT CAN YOU STORE ──────────────────────────────────── -->
+    <div class="compare-section">
+      <div class="section-title-row">
+        <p class="compare-section__title">What can you store here?</p>
+      </div>
+
+      <!-- How goods are stored -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">How your goods are stored</div>
+        <div class="compare-cell col-highlight">On shelves or stacked in bulk</div>
+        <div class="compare-cell">In bulk, on shelves, or open yard</div>
+        <div class="compare-cell">Open yard or stacked in bulk</div>
+      </div>
+
+      <!-- Temperature -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Temperature inside</div>
+        <div class="compare-cell col-highlight">Air conditioned &middot; Ambient</div>
+        <div class="compare-cell">Not air conditioned &middot; Ambient</div>
+        <div class="compare-cell">Air conditioned &middot; Ambient &middot; Cold storage</div>
+      </div>
+
+      <!-- Type of goods accepted -->
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Type of goods accepted</div>
+        <div class="compare-cell col-highlight">General goods &middot; Food &amp; drinks</div>
+        <div class="compare-cell">General &middot; Chemicals &middot; Hazardous</div>
+        <div class="compare-cell">General &middot; Hazardous goods</div>
+      </div>
+    </div>
+
+    <!-- ── SERVICES THEY OFFER ────────────────────────────────── -->
+    <div class="compare-section" data-score-section>
+      <div class="compare-row section-score-row">
+        <div class="compare-cell compare-cell--label">
+          <p class="compare-section__title">Services they offer</p>
+        </div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Loading &amp; unloading trucks</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Arranging goods on pallets</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Sorting goods by type or order</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Transport to your customers</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Unloading 20-foot containers</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Unloading 40-foot containers</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Workers provided on site</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Freight services</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Labelling &amp; barcoding</div>
+        <div class="compare-cell col-highlight"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Stock reports</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+    </div>
+
+    <!-- ── EQUIPMENT AVAILABLE ────────────────────────────────── -->
+    <div class="compare-section" data-score-section>
+      <div class="compare-row section-score-row">
+        <div class="compare-cell compare-cell--label">
+          <p class="compare-section__title">Equipment available</p>
+        </div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Jack trolley &amp; hand truck</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Forklift</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Reach truck</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Pallet jack</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Crane</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+      </div>
+    </div>
+
+    <!-- ── SAFETY & COMPLIANCE ────────────────────────────────── -->
+    <div class="compare-section" data-score-section>
+      <div class="compare-row section-score-row">
+        <div class="compare-cell compare-cell--label">
+          <p class="compare-section__title">Safety &amp; compliance</p>
+        </div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Fire alarms &amp; sprinklers</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Civil defence approval</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Food security approval</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row identical">
+        <div class="compare-cell compare-cell--label">Fire &amp; safety AMC</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">Pest control AMC</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-cell compare-cell--label">You can bring your own workers</div>
+        <div class="compare-cell col-highlight"><span class="check">✓</span></div>
+        <div class="compare-cell"><span class="not-available">Not available</span></div>
+        <div class="compare-cell"><span class="check">✓</span></div>
+      </div>
+    </div>
+
+  <!-- ── EMPTY STATE ───────────────────────────────────────────── -->
+  <div id="emptyState" style="display:none;">
+    <div class="empty-state">
+      <div class="empty-state__icon">
+        <i class="ph ph-warehouse"></i>
+      </div>
+      <h3 class="empty-state__title">No warehouses selected</h3>
+      <p class="empty-state__subtitle">You've removed all warehouses. Go back and add some to compare side by side.</p>
+      <a href="#" class="btn btn--primary" style="margin-top:var(--spacing-8);">
+        <i class="ph ph-arrow-left" style="font-size:14px;"></i>
+        Find Warehouses
+      </a>
+    </div>
+  </div>
+
+  </div><!-- /table-area__inner -->
+</div><!-- /table-area -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════════ -->
+<footer class="footer" role="contentinfo">
+  <div class="footer__inner">
+    <div class="footer__grid">
+
+      <!-- Brand column -->
+      <div class="footer__brand">
+        <a href="/" class="footer__logo" aria-label="Cargoz">
+          <div class="footer__logo-mark">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3 14L10 4L17 14H3Z" fill="white" opacity="0.9"/>
+              <path d="M6 14H14V17H6V14Z" fill="white"/>
+            </svg>
+          </div>
+          <span class="footer__logo-text">Cargoz</span>
+        </a>
+        <p class="footer__tagline">
+          The smarter way to find, compare, and book warehouses across the UAE.
+        </p>
+        <div class="footer__contact">
+          <a href="tel:+97141234567" class="footer__contact-item">
+            <i class="ph-fill ph-phone" style="font-size: 16px; color: rgba(255,255,255,0.6);"></i>
+            +971 4 123 4567
+          </a>
+          <a href="https://wa.me/97141234567" class="footer__contact-item">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6.5" stroke="#25D366" stroke-width="1.2"/>
+              <path d="M5 8c0 1.66 1.34 3 3 3 .55 0 1.07-.15 1.52-.41L11 11l-.41-1.48A3 3 0 005 8z" fill="#25D366"/>
+            </svg>
+            WhatsApp us
+          </a>
+          <a href="mailto:hello@cargoz.ae" class="footer__contact-item">
+            <i class="ph-fill ph-envelope" style="font-size: 16px; color: rgba(255,255,255,0.6);"></i>
+            hello@cargoz.ae
+          </a>
+        </div>
+        <div class="footer__social">
+          <a href="#" class="footer__social-icon" aria-label="LinkedIn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3.5 2C2.67 2 2 2.67 2 3.5S2.67 5 3.5 5 5 4.33 5 3.5 4.33 2 3.5 2zm-1 4h2v7h-2V6zm4 0h2v1h.03c.28-.53.97-1.1 2-1.1C12.53 5.9 13 7.2 13 9v4h-2V9.5c0-.74-.01-1.7-1.03-1.7C8.93 7.8 8.5 8.53 8.5 9.5V13h-2V6z"/>
+            </svg>
+          </a>
+          <a href="#" class="footer__social-icon" aria-label="Instagram">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+              <rect x="2" y="2" width="12" height="12" rx="3.5"/>
+              <circle cx="8" cy="8" r="2.8"/>
+              <circle cx="11.2" cy="4.8" r="0.6" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
+          <a href="#" class="footer__social-icon" aria-label="Twitter / X">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M12.6 2h2.1L9.9 6.9 15.5 14h-4l-3.4-4.5L4.4 14H2.3l5.2-5.5L2 2h4.1l3.1 4L12.6 2zm-.7 10.8h1.2L4.2 3.2H2.9l9 9.6z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Services col -->
+      <div class="footer__col">
+        <p class="footer__col-title">Services</p>
+        <a href="#" class="footer__col-link">Find a Warehouse</a>
+        <a href="#" class="footer__col-link">Compare Warehouses</a>
+        <a href="#" class="footer__col-link">Get an Estimate</a>
+        <a href="#" class="footer__col-link">Freight Services</a>
+        <a href="#" class="footer__col-link">Customs Clearance</a>
+      </div>
+
+      <!-- Company col -->
+      <div class="footer__col">
+        <p class="footer__col-title">Company</p>
+        <a href="#" class="footer__col-link">About Cargoz</a>
+        <a href="#" class="footer__col-link">How it Works</a>
+        <a href="#" class="footer__col-link">Blog</a>
+        <a href="#" class="footer__col-link">Careers</a>
+        <a href="#" class="footer__col-link">Contact Us</a>
+      </div>
+
+      <!-- Legal col -->
+      <div class="footer__col">
+        <p class="footer__col-title">Legal</p>
+        <a href="#" class="footer__col-link">Terms of Service</a>
+        <a href="#" class="footer__col-link">Privacy Policy</a>
+        <a href="#" class="footer__col-link">Cookie Policy</a>
+        <a href="#" class="footer__col-link">Warehouse Guidelines</a>
+      </div>
+
+    </div><!-- /footer__grid -->
+
+    <div class="footer__bottom">
+      <span>&copy; 2026 Cargoz. All rights reserved. Registered in the UAE.</span>
+      <div class="footer__bottom-links">
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ESTIMATE FORM DRAWER
+═══════════════════════════════════════════════════════════════ -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+<aside class="drawer" id="formDrawer" role="dialog" aria-modal="true" aria-label="Get estimate">
+  <div class="drawer__header">
+    <span class="drawer__heading" id="drawerHeading">Your Details</span>
+    <button class="drawer__close" id="drawerCloseBtn" aria-label="Close drawer">
+      <i class="ph ph-x" style="font-size:15px;"></i>
+    </button>
+  </div>
+  <div class="drawer__body">
+
+    <!-- Main form card -->
+    <div class="form-card">
+      <div class="form-card__header">
+        <div class="form-card__title" id="drawerFormTitle">Get Free Comparison</div>
+        <div class="form-card__subtitle" id="drawerFormSubtitle">Side-by-side cost breakdown for 3 warehouses</div>
+      </div>
+
+      <div class="form-fields">
+        <input type="text" class="form-input" placeholder="Full name" autocomplete="name" required />
+        <input type="text" class="form-input" placeholder="Business name" autocomplete="organization" />
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">+971</span>
+          <input type="tel" class="form-input form-input--phone" placeholder="50 123 4567" autocomplete="tel" required />
+        </div>
+      </div>
+
+      <button class="btn--form-cta" id="drawerCta">
+        <i class="ph ph-arrow-right"></i>
+        <span id="drawerCtaLabel">Get Free Comparison</span>
+      </button>
+      <p class="form-card__note">No payment required</p>
+    </div>
+
+    <!-- Prefer a call? -->
+    <div class="call-card">
+      <div class="call-card__title">Prefer a call?</div>
+      <div class="call-card__row">
+        <input type="tel" class="call-card__input" placeholder="+971 50 123 4567" autocomplete="tel" />
+        <button class="btn--call">Call me</button>
+      </div>
+      <div class="call-card__note">We'll call within 30 minutes</div>
+    </div>
+
+
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════════ -->
+<script>
+  // ── Sticky cards: compact mode via IntersectionObserver + GSAP ──
+  const cardsRow = document.getElementById('cardsRow');
+  const sentinel = document.getElementById('cardsSentinel');
+  const navbar   = document.querySelector('.navbar');
+
+  let compactTween = null; // prevent overlapping tweens
+
+  const compactObserver = new IntersectionObserver(
+    ([entry]) => {
+      if (compactTween) compactTween.kill();
+
+      const cards = gsap.utils.toArray('.warehouse-card');
+      const goingCompact = !entry.isIntersecting;
+
+      compactTween = gsap.timeline()
+        // Step 1: fade + nudge cards out (staggered for polish)
+        .to(cards, {
+          opacity: 0,
+          y: goingCompact ? -6 : 6,
+          duration: 0.12,
+          ease: 'power2.in',
+          stagger: 0.025
+        })
+        // Step 2: switch layout class (invisible, so no flash)
+        .add(() => {
+          if (goingCompact) {
+            cardsRow.classList.add('is-compact', 'is-stuck');
+          } else {
+            cardsRow.classList.remove('is-compact', 'is-stuck');
+          }
+        })
+        // Step 3: fade cards back in with a spring feel
+        .to(cards, {
+          opacity: 1,
+          y: 0,
+          duration: 0.22,
+          ease: 'power3.out',
+          stagger: 0.03
+        });
+    },
+    {
+      rootMargin: `-${navbar ? navbar.offsetHeight : 64}px 0px 0px 0px`,
+      threshold: 0
+    }
+  );
+
+  if (sentinel) compactObserver.observe(sentinel);
+
+  // ── Rebalance grid after card removal ───────────────────────────
+  function rebalanceGrid() {
+    const remainingCards = document.querySelectorAll('.warehouse-card').length;
+    document.documentElement.style.setProperty('--wh-cols', remainingCards);
+
+    const emptyState = document.getElementById('emptyState');
+    const compareContent = document.querySelectorAll('.compare-section, .toggle-pill');
+
+    if (remainingCards === 0) {
+      // Animate empty state in
+      if (emptyState) {
+        emptyState.style.display = 'block';
+        gsap.fromTo(emptyState,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', delay: 0.1 }
+        );
+      }
+      compareContent.forEach(el => el.style.display = 'none');
+    } else {
+      if (emptyState) emptyState.style.display = 'none';
+      compareContent.forEach(el => el.style.display = '');
+    }
+
+    buildScores();
+  }
+
+  // ── Remove card (GSAP) ──────────────────────────────────────────
+  function removeCard(whNum) {
+    const card = document.querySelector(`.warehouse-card[data-wh="${whNum}"]`);
+    if (!card) return;
+
+    const allCards = Array.from(document.querySelectorAll('.warehouse-card'));
+    const colIndex = allCards.indexOf(card);
+
+    gsap.timeline()
+      // Fade + scale out
+      .to(card, {
+        opacity: 0,
+        scale: 0.88,
+        y: 10,
+        duration: 0.2,
+        ease: 'power2.in'
+      })
+      // DOM removal + rebalance
+      .add(() => {
+        card.remove();
+        document.querySelectorAll('.compare-row').forEach(row => {
+          const cells = row.querySelectorAll('.compare-cell');
+          const target = cells[colIndex + 1];
+          if (target) target.remove();
+        });
+        rebalanceGrid();
+      });
+  }
+
+  // ── Section scores + pill entrance animation ───────────────────
+  function buildScores() {
+    const numCols = document.querySelectorAll('.warehouse-card').length;
+
+    document.querySelectorAll('[data-score-section]').forEach(section => {
+      const scoreRow = section.querySelector('.section-score-row');
+      if (!scoreRow) return;
+
+      scoreRow.querySelectorAll('.score-cell').forEach(el => el.remove());
+
+      const dataRows = section.querySelectorAll('.compare-row:not(.section-score-row)');
+      const total = dataRows.length;
+      const scores = [];
+
+      for (let col = 0; col < numCols; col++) {
+        let yes = 0;
+        dataRows.forEach(row => {
+          const cell = row.querySelectorAll('.compare-cell')[col + 1];
+          if (cell && cell.querySelector('.check')) yes++;
+        });
+        scores.push(yes);
+      }
+
+      const maxScore = Math.max(...scores);
+      const hasUniqueWinner = scores.filter(s => s === maxScore).length === 1;
+
+      scores.forEach((yes, col) => {
+        const ratio = total > 0 ? yes / total : 0;
+        const tier = yes === total ? 'full' : ratio >= 0.7 ? 'partial' : 'low';
+        const icon = tier === 'full' ? 'ph-check-circle' : tier === 'partial' ? 'ph-warning' : 'ph-x-circle';
+        const isWinner = hasUniqueWinner && yes === maxScore;
+
+        const pill = document.createElement('span');
+        pill.className = `score-pill score-pill--${tier}${isWinner ? ' score-pill--winner' : ''}`;
+        pill.innerHTML = `<i class="ph-bold ${icon}" style="font-size:13px;"></i> ${yes} / ${total}`;
+
+        const cell = document.createElement('div');
+        cell.className = 'compare-cell score-cell';
+        cell.appendChild(pill);
+        scoreRow.appendChild(cell);
+      });
+    });
+
+    // Animate new pills in with a spring pop
+    gsap.fromTo('.score-pill',
+      { scale: 0.6, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.8)', stagger: 0.04 }
+    );
+  }
+
+  // ── Page entry animation ────────────────────────────────────────
+  gsap.timeline({ delay: 0.1 })
+    .from('.warehouse-card', {
+      opacity: 0,
+      y: 24,
+      duration: 0.5,
+      ease: 'power3.out',
+      stagger: 0.1
+    })
+    .from('.compare-section', {
+      opacity: 0,
+      y: 12,
+      duration: 0.4,
+      ease: 'power2.out',
+      stagger: 0.06
+    }, '-=0.2');
+
+  // Run on load
+  buildScores();
+
+  // ── Estimate form drawer ────────────────────────────────────────
+  const drawer         = document.getElementById('formDrawer');
+  const backdrop       = document.getElementById('drawerBackdrop');
+  const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+  const drawerCta      = document.getElementById('drawerCta');
+
+  const COPY = {
+    comparison: {
+      heading:  'Your Details',
+      title:    'Get Free Comparison',
+      subtitle: 'Side-by-side cost breakdown for 3 warehouses',
+      cta:      'Get Free Comparison',
+      dest:     'estimate-comparison.html'
+    },
+    single: {
+      heading:  'Your Details',
+      title:    'Get Your Estimate',
+      subtitle: 'Your personalised warehouse cost breakdown',
+      cta:      'Get My Estimate',
+      dest:     'estimate.html'
+    }
+  };
+
+  let activeType = 'comparison';
+
+  window.openDrawer = function(type) {
+    activeType = type || 'comparison';
+    const c = COPY[activeType];
+    document.getElementById('drawerHeading').textContent     = c.heading;
+    document.getElementById('drawerFormTitle').textContent   = c.title;
+    document.getElementById('drawerFormSubtitle').textContent = c.subtitle;
+    document.getElementById('drawerCtaLabel').textContent    = c.cta;
+    drawer.classList.add('is-open');
+    backdrop.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => drawer.querySelector('.form-input')?.focus(), 80);
+  };
+
+  window.closeDrawer = function() {
+    drawer.classList.remove('is-open');
+    backdrop.classList.remove('is-open');
+    document.body.style.overflow = '';
+  };
+
+  drawerCloseBtn.addEventListener('click', window.closeDrawer);
+  backdrop.addEventListener('click', window.closeDrawer);
+
+  drawerCta.addEventListener('click', () => {
+    window.location.href = COPY[activeType].dest;
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer.classList.contains('is-open')) window.closeDrawer();
+  });
+
+  // ── Toggle: show all / show differences only ───────────────────
+  function showAll() {
+    const rows = document.querySelectorAll('.compare-row.identical.hide-identical');
+    rows.forEach(r => {
+      r.classList.remove('hide-identical');
+      gsap.fromTo(r, { opacity: 0, y: -4 }, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' });
+    });
+    document.getElementById('btnShowAll').classList.add('toggle-pill__opt--active');
+    document.getElementById('btnShowDiff').classList.remove('toggle-pill__opt--active');
+    document.getElementById('btnShowAll').style.fontWeight = '600';
+    document.getElementById('btnShowDiff').style.fontWeight = '400';
+  }
+
+  function showDiffs() {
+    const rows = document.querySelectorAll('.compare-row.identical:not(.hide-identical)');
+    gsap.to(rows, {
+      opacity: 0,
+      height: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
+      duration: 0.18,
+      ease: 'power2.in',
+      stagger: 0.02,
+      onComplete: () => rows.forEach(r => r.classList.add('hide-identical'))
+    });
+    document.getElementById('btnShowDiff').classList.add('toggle-pill__opt--active');
+    document.getElementById('btnShowAll').classList.remove('toggle-pill__opt--active');
+    document.getElementById('btnShowDiff').style.fontWeight = '600';
+    document.getElementById('btnShowAll').style.fontWeight = '400';
+  }
+</script>
+
+</body>
+</html>

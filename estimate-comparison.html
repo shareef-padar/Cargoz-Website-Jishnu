@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparison Estimate — Cargoz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ── estimate-comparison.html — page-specific ─────────────── */
+
+    /* ── 3-COLUMN GRID ─────────────────────────────────────────── */
+    .content-area {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 0 var(--page-pad) var(--spacing-48);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-20);
+      align-items: start;
+    }
+
+    .comp-col--full { grid-column: 1 / -1; }
+
+    /* ── BASE CARD ─────────────────────────────────────────────── */
+    .wc-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-text-100);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .wc-card--best {
+      border-color: var(--color-text-800);
+      border-width: 2px;
+      box-shadow: var(--shadow-lg);
+      background: var(--color-white);
+    }
+
+    /* ── COLORED HEADER ────────────────────────────────────────── */
+    .wc-header {
+      padding: 16px 18px 15px;
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    .wc-header--purple {
+      background: linear-gradient(rgba(15,23,43,0.68), rgba(15,23,43,0.68)),
+                  url('Warehouse%20Image/2152005466.jpg') center/cover no-repeat;
+    }
+    .wc-header--teal {
+      background: linear-gradient(rgba(15,23,43,0.68), rgba(15,23,43,0.68)),
+                  url('Warehouse%20Image/74079.jpg') center/cover no-repeat;
+    }
+    .wc-header--navy {
+      background: linear-gradient(rgba(15,23,43,0.68), rgba(15,23,43,0.68)),
+                  url('Warehouse%20Image/83418.jpg') center/cover no-repeat;
+    }
+
+    /* Decorative circles in header */
+    .wc-header::before {
+      content: '';
+      position: absolute;
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      top: -45px; right: -25px;
+      pointer-events: none;
+    }
+
+    .wc-header::after {
+      content: '';
+      position: absolute;
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      bottom: -28px; right: 55px;
+      pointer-events: none;
+    }
+
+    .wc-header__inner {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .wc-header__left {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .wc-icon {
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+      color: rgba(255,255,255,0.88);
+      flex-shrink: 0;
+    }
+
+    .wc-wh__id {
+      font-size: 10px; font-weight: 800;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .wc-wh__name {
+      font-size: 13px; font-weight: 700;
+      color: white;
+      line-height: 1.3;
+      margin-top: 3px;
+    }
+
+    .wc-wh__status {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+
+    .wc-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.18);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(4px);
+    }
+
+    /* ── PRICE BLOCK ───────────────────────────────────────────── */
+    .wc-price {
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid var(--color-text-100);
+    }
+
+    .wc-price__label {
+      font-size: 11px; font-weight: 600;
+      color: var(--color-text-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .wc-price__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 5px 0 5px;
+    }
+
+    .wc-price__amount {
+      font-size: 30px; font-weight: 900;
+      color: var(--color-text-900);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .wc-price__amount--purple { color: var(--color-text-900); }
+    .wc-price__amount--teal   { color: var(--color-text-900); }
+
+    .wc-savings {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700;
+      color: var(--color-green-700);
+      background: var(--color-green-50);
+      border: 1px solid var(--color-green-100);
+      border-radius: 20px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .wc-price__meta     { font-size: 13px; color: var(--color-text-500); }
+    .wc-price__validity { font-size: 11px; color: var(--color-text-400); margin-top: 2px; }
+
+    /* ── LINE ITEMS ────────────────────────────────────────────── */
+    .line-items { padding: var(--spacing-8) 0 0; }
+
+    .line-item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 8px 22px;
+      gap: var(--spacing-12);
+    }
+
+    .line-item:hover { background: var(--color-text-50); }
+
+    .line-name {
+      font-size: 13px;
+      color: var(--color-text-700);
+      font-weight: 500;
+    }
+
+    .line-calc {
+      font-size: 11px;
+      color: var(--color-text-400);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    .line-val {
+      font-size: 13px;
+      color: var(--color-text-900);
+      font-weight: 600;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .line-divider {
+      height: 1px;
+      background: var(--color-text-100);
+      margin: var(--spacing-4) 22px;
+    }
+
+    .line-item--muted .line-name,
+    .line-item--muted .line-val {
+      color: var(--color-text-400);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .line-item--total {
+      background: var(--color-text-900);
+      padding: 13px 22px;
+      margin-top: var(--spacing-8);
+    }
+
+    .line-item--total:hover { background: var(--color-text-800); }
+
+    .line-item--total .line-name {
+      font-size: 14px; font-weight: 700; color: var(--color-white);
+    }
+
+    .line-item--total .line-val {
+      font-size: 16px; font-weight: 900; color: var(--color-white);
+      letter-spacing: -0.5px;
+    }
+
+    /* ── WAREHOUSE FACTS ───────────────────────────────────────── */
+    .wc-facts {
+      padding: 13px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      border-bottom: 1px solid var(--color-text-100);
+    }
+
+    .wc-fact {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 500;
+      color: var(--color-text-600);
+    }
+
+    .wc-fact i { color: var(--color-text-400); font-size: 13px; flex-shrink: 0; }
+
+    .wc-fact--avail { color: #059669; }
+    .wc-fact--avail i { color: #10b981; }
+
+    .wc-fact--warn { color: var(--color-text-500); }
+
+    /* ── FEATURE TAGS ──────────────────────────────────────────── */
+    .wc-tags {
+      padding: 10px 22px 12px;
+      display: flex; flex-wrap: wrap; gap: 4px;
+      border-bottom: 1px solid var(--color-text-100);
+    }
+
+    .feat-tag {
+      font-size: 10px; font-weight: 600;
+      color: var(--color-text-500);
+      background: var(--color-text-50);
+      border: 1px solid var(--color-text-100);
+      border-radius: 20px;
+      padding: 3px 9px;
+    }
+
+    /* ── PER-CARD VIEW LINK ─────────────────────────────────────── */
+    .wc-view-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-text-700);
+      text-decoration: none;
+      border-top: 1px solid var(--color-text-100);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .wc-view-link:hover {
+      background: var(--color-text-50);
+      color: var(--color-text-900);
+    }
+
+    /* ── SHARED ACTION BAR ──────────────────────────────────────── */
+    .shared-cta {
+      background: var(--color-white);
+      border: 1px solid var(--color-text-100);
+      border-radius: 20px;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .shared-cta__text {}
+
+    .shared-cta__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-900);
+    }
+
+    .shared-cta__sub {
+      font-size: 13px;
+      color: var(--color-text-500);
+      margin-top: 3px;
+    }
+
+    .shared-cta__actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .shared-cta__actions .btn--whatsapp {
+      height: 48px;
+      padding: 0 28px;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .shared-cta__actions .btn--outline {
+      height: 48px;
+      padding: 0 24px;
+      font-size: 14px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── WHAT HAPPENS NEXT ─────────────────────────────────────── */
+    .next-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-text-100);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .next-body {
+      padding: var(--spacing-24) var(--spacing-32);
+    }
+
+    .next-list {
+      margin-top: var(--spacing-16);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-32);
+    }
+
+    .next-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-16);
+    }
+
+    .next-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--color-text-100);
+      color: var(--color-text-500);
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    .next-num--active { background: var(--color-text-900); color: var(--color-white); }
+
+    .next-title  { font-size: 14px; font-weight: 700; color: var(--color-text-900); margin-bottom: 2px; }
+    .next-desc   { font-size: 13px; color: var(--color-text-500); line-height: 1.5; }
+    .next-timing { font-size: 12px; color: var(--color-text-400); margin-top: 4px; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__logo">
+      <div class="navbar__logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 14L10 4L17 14H3Z" fill="white" opacity="0.9"/>
+          <path d="M6 14H14V17H6V14Z" fill="white"/>
+        </svg>
+      </div>
+      <span class="navbar__logo-text">Cargoz</span>
+    </a>
+    <nav class="navbar__nav">
+      <a href="#" class="navbar__link">Services</a>
+      <a href="#" class="navbar__link">Location</a>
+      <a href="#" class="navbar__link">How Cargoz Helps</a>
+      <a href="#" class="navbar__link">Blog</a>
+      <a href="#" class="navbar__link">Login</a>
+    </nav>
+    <div class="navbar__actions">
+      <a href="#" class="btn btn--primary">Book a Warehouse</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     PROGRESS STEPPER
+══════════════════════════════════════════════════════ -->
+<div class="stepper">
+  <div class="stepper__inner">
+    <div class="step step--done">
+      <div class="step__circle"></div>
+      <span class="step__label">Find Warehouses</span>
+    </div>
+    <div class="step__connector step__connector--done"></div>
+    <div class="step step--done">
+      <div class="step__circle"></div>
+      <span class="step__label">Customise Estimate</span>
+    </div>
+    <div class="step__connector step__connector--done"></div>
+    <div class="step step--active">
+      <div class="step__circle"><span>3</span></div>
+      <span class="step__label">Get Your Estimate</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════════════════════ -->
+<div class="page-header">
+  <div class="page-header__inner">
+    <a href="compare.html" class="back-link">
+      <i class="ph ph-caret-left" style="font-size:14px;"></i>
+      Back to comparison
+    </a>
+    <div class="page-header__row">
+      <div class="page-header__titles">
+        <h1 class="page-header__title">Comparison estimate</h1>
+        <div class="page-header__subtitle">
+          3 warehouses &middot; WH-001 &middot; WH-002 &middot; WH-003
+          <span style="color:var(--color-text-300);">&middot;</span>
+          <span class="avail-dot">All available</span>
+        </div>
+        <div class="est-ref" style="margin-top:6px;">#CGZ-EST-2026-04188 &middot; Valid until 10 Apr 2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     3-COLUMN GRID
+══════════════════════════════════════════════════════ -->
+<div class="content-area">
+
+  <!-- ── SHARED ACTION BAR ─────────────────────────────────── -->
+  <div class="comp-col--full">
+    <div class="shared-cta">
+      <div class="shared-cta__text">
+        <div class="shared-cta__title">Ready to proceed?</div>
+        <div class="shared-cta__sub">Pick your preferred warehouse and our team will reach out within 30 minutes.</div>
+      </div>
+      <div class="shared-cta__actions">
+        <a href="#" class="btn btn--outline">
+          <i class="ph ph-download-simple" style="font-size:15px;"></i>
+          Download PDF
+        </a>
+        <a href="#" class="btn btn--whatsapp">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.938-1.418A9.954 9.954 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm4.93 13.57c-.208.585-1.227 1.12-1.685 1.162-.458.042-.89.205-2.986-.622-2.53-.993-4.15-3.582-4.275-3.748-.126-.167-1.026-1.364-1.026-2.602 0-1.238.648-1.847.878-2.1.23-.25.5-.313.668-.313l.48.009c.154.007.36-.058.563.43.208.5.707 1.728.768 1.854.062.125.104.27.02.434-.083.165-.125.267-.25.41l-.375.437c-.124.138-.254.287-.11.564.146.278.646 1.065 1.388 1.722.954.848 1.758 1.11 2.036 1.236.278.125.44.104.602-.063.167-.167.708-.833.896-1.118.188-.285.375-.237.63-.143.256.094 1.624.766 1.902.906.278.14.463.208.531.323.07.115.07.667-.138 1.252z"/></svg>
+          Confirm on WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COLUMN 1 · Al Quoz · Best Value ──────────────────── -->
+  <div class="wc-card wc-card--best">
+
+    <div class="wc-header wc-header--purple">
+      <div class="wc-header__inner">
+        <div class="wc-header__left">
+          <div class="wc-icon"><i class="ph ph-warehouse"></i></div>
+          <div>
+            <div class="wc-wh__id">WH-001</div>
+            <div class="wc-wh__name">Al Quoz, Dubai</div>
+            <div class="wc-wh__status">
+              <i class="ph ph-seal-check" style="font-size:11px;"></i> Cargoz Verified
+            </div>
+          </div>
+        </div>
+        <div class="wc-badge">&#9733; Best Value</div>
+      </div>
+    </div>
+
+    <div class="wc-price">
+      <div class="wc-price__label">Monthly estimate</div>
+      <div class="wc-price__row">
+        <div class="wc-price__amount wc-price__amount--purple">AED 8,750</div>
+        <div class="wc-savings"><i class="ph ph-trend-down" style="font-size:12px;"></i> Saves AED 5,550</div>
+      </div>
+      <div class="wc-price__meta">per month &middot; 500 sqft &middot; 3 months</div>
+      <div class="wc-price__validity">Valid until 10 Apr 2026</div>
+    </div>
+
+    <div class="line-items">
+      <div class="line-item">
+        <span class="line-name">Base Rent <span class="line-calc">500 sqft &times; AED 10/sqft</span></span>
+        <span class="line-val">AED 5,000</span>
+      </div>
+      <div class="line-item">
+        <span class="line-name">Handling</span>
+        <span class="line-val">AED 2,400</span>
+      </div>
+      <div class="line-item">
+        <span class="line-name">Insurance</span>
+        <span class="line-val">AED 950</span>
+      </div>
+      <div class="line-divider"></div>
+      <div class="line-item line-item--muted">
+        <span class="line-name">Subtotal (excl. VAT)</span>
+        <span class="line-val">AED 8,350</span>
+      </div>
+      <div class="line-item line-item--muted">
+        <span class="line-name">VAT 5%</span>
+        <span class="line-val">AED 400</span>
+      </div>
+      <div class="line-item line-item--total">
+        <span class="line-name">Total</span>
+        <span class="line-val">AED 8,750</span>
+      </div>
+    </div>
+
+    <div class="wc-facts">
+      <div class="wc-fact">
+        <i class="ph ph-map-pin"></i>
+        <span>Al Quoz, Dubai</span>
+      </div>
+      <div class="wc-fact">
+        <i class="ph ph-star"></i>
+        <span>4.8 &middot; 312 reviews</span>
+      </div>
+      <div class="wc-fact wc-fact--avail">
+        <i class="ph ph-lightning"></i>
+        <span>Available immediately</span>
+      </div>
+    </div>
+
+    <div class="wc-tags">
+      <span class="feat-tag">Loading Dock</span>
+      <span class="feat-tag">24/7 Access</span>
+      <span class="feat-tag">CCTV</span>
+      <span class="feat-tag">Forklift</span>
+    </div>
+
+    <a href="estimate.html" class="wc-view-link">
+      View full estimate <i class="ph ph-arrow-right" style="font-size:13px;"></i>
+    </a>
+
+  </div>
+
+  <!-- ── COLUMN 2 · DIP · Cheapest ─────────────────────────── -->
+  <div class="wc-card">
+
+    <div class="wc-header wc-header--teal">
+      <div class="wc-header__inner">
+        <div class="wc-header__left">
+          <div class="wc-icon"><i class="ph ph-warehouse"></i></div>
+          <div>
+            <div class="wc-wh__id">WH-002</div>
+            <div class="wc-wh__name">DIP, Dubai</div>
+            <div class="wc-wh__status">
+              <i class="ph ph-clock" style="font-size:11px;"></i> Verification pending
+            </div>
+          </div>
+        </div>
+        <div class="wc-badge">&#9650; Cheapest</div>
+      </div>
+    </div>
+
+    <div class="wc-price">
+      <div class="wc-price__label">Monthly estimate</div>
+      <div class="wc-price__row">
+        <div class="wc-price__amount wc-price__amount--teal">AED 5,200</div>
+        <div class="wc-savings"><i class="ph ph-trend-down" style="font-size:12px;"></i> Saves AED 9,100</div>
+      </div>
+      <div class="wc-price__meta">per month &middot; 500 sqft &middot; 3 months</div>
+      <div class="wc-price__validity">Valid until 10 Apr 2026</div>
+    </div>
+
+    <div class="line-items">
+      <div class="line-item">
+        <span class="line-name">Base Rent <span class="line-calc">500 sqft &times; AED 6.25/sqft</span></span>
+        <span class="line-val">AED 3,125</span>
+      </div>
+      <div class="line-item">
+        <span class="line-name">Handling</span>
+        <span class="line-val">AED 1,500</span>
+      </div>
+      <div class="line-item">
+        <span class="line-name">Insurance</span>
+        <span class="line-val">AED 340</span>
+      </div>
+      <div class="line-divider"></div>
+      <div class="line-item line-item--muted">
+        <span class="line-name">Subtotal (excl. VAT)</span>
+        <span class="line-val">AED 4,965</span>
+      </div>
+      <div class="line-item line-item--muted">
+        <span class="line-name">VAT 5%</span>
+        <span class="line-val">AED 235</span>
+      </div>
+      <div class="line-item line-item--total">
+        <span class="line-name">Total</span>
+        <span class="line-val">AED 5,200</span>
+      </div>
+    </div>
+
+    <div class="wc-facts">
+      <div class="wc-fact">
+        <i class="ph ph-map-pin"></i>
+        <span>DIP, Dubai</span>
+      </div>
+      <div class="wc-fact">
+        <i class="ph ph-star"></i>
+        <span style="color:var(--color-text-400);">No reviews yet</span>
+      </div>
+      <div class="wc-fact wc-fact--warn">
+        <i class="ph ph-calendar-blank"></i>
+        <span>Available 11 Nov 2026</span>
+      </div>
+    </div>
+
+    <div class="wc-tags">
+      <span class="feat-tag">Loading Dock</span>
+      <span class="feat-tag">24/7 Access</span>
+      <span class="feat-tag">Open Yard</span>
+    </div>
+
+    <a href="estimate.html" class="wc-view-link">
+      View full estimate <i class="ph ph-arrow-right" style="font-size:13px;"></i>
+    </a>
+
+  </div>
+
+  <!-- ── COLUMN 3 · JAFZA · Most Rated ─────────────────────── -->
+  <div class="wc-card">
+
+    <div class="wc-header wc-header--navy">
+      <div class="wc-header__inner">
+        <div class="wc-header__left">
+          <div class="wc-icon"><i class="ph ph-warehouse"></i></div>
+          <div>
+            <div class="wc-wh__id">WH-003</div>
+            <div class="wc-wh__name">JAFZA, Dubai</div>
+            <div class="wc-wh__status">
+              <i class="ph ph-seal-check" style="font-size:11px;"></i> Cargoz Verified
+            </div>
+          </div>
+        </div>
+        <div class="wc-badge">&#9733; Most Rated</div>
+      </div>
+    </div>
+
+    <div class="wc-price">
+      <div class="wc-price__label">Monthly estimate</div>
+      <div class="wc-price__row">
+        <div class="wc-price__amount">AED 14,300</div>
+        <div style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color: var(--color-text-700); background: var(--color-text-50); border:1px solid var(--color-text-200); border-radius:20px; padding:4px 10px; white-space:nowrap;">
+          <i class="ph ph-crown" style="font-size:12px;"></i> Premium choice
+        </div>
+      </div>
+      <div class="wc-price__meta">per month &middot; 500 sqft &middot; 3 months</div>
+      <div class="wc-price__validity">Valid until 10 Apr 2026</div>
+    </div>
+
+    <div class="line-items">
+      <div class="line-item">
+        <span class="line-name">Base Rent <span class="line-calc">500 sqft &times; AED 19.2/sqft</span></span>
+        <span class="line-val">AED 9,600</span>
+      </div>
+      <div class="line-item">
+        <span class="line-name">Handling</span>
+        <span class="line-val">AED 3,500</span>
+      </div>
+      <div class="line-item">
+        <span class="line-name">Insurance</span>
+        <span class="line-val">AED 520</span>
+      </div>
+      <div class="line-divider"></div>
+      <div class="line-item line-item--muted">
+        <span class="line-name">Subtotal (excl. VAT)</span>
+        <span class="line-val">AED 13,620</span>
+      </div>
+      <div class="line-item line-item--muted">
+        <span class="line-name">VAT 5%</span>
+        <span class="line-val">AED 680</span>
+      </div>
+      <div class="line-item line-item--total">
+        <span class="line-name">Total</span>
+        <span class="line-val">AED 14,300</span>
+      </div>
+    </div>
+
+    <div class="wc-facts">
+      <div class="wc-fact">
+        <i class="ph ph-map-pin"></i>
+        <span>JAFZA, Dubai</span>
+      </div>
+      <div class="wc-fact">
+        <i class="ph ph-star"></i>
+        <span>4.9 &middot; 589 reviews</span>
+      </div>
+      <div class="wc-fact wc-fact--warn">
+        <i class="ph ph-calendar-blank"></i>
+        <span>Available 25 Apr 2026</span>
+      </div>
+    </div>
+
+    <div class="wc-tags">
+      <span class="feat-tag">Loading Dock</span>
+      <span class="feat-tag">Cold Storage</span>
+      <span class="feat-tag">CCTV</span>
+      <span class="feat-tag">Crane</span>
+    </div>
+
+    <a href="estimate.html" class="wc-view-link">
+      View full estimate <i class="ph ph-arrow-right" style="font-size:13px;"></i>
+    </a>
+
+  </div>
+
+  <!-- ── WHAT HAPPENS NEXT ──────────────────────────────────── -->
+  <div class="comp-col--full">
+    <div class="next-card">
+      <div class="next-body">
+        <div class="card-title">What Happens Next</div>
+        <div class="next-list">
+          <div class="next-item">
+            <div class="next-num next-num--active">1</div>
+            <div>
+              <div class="next-title">We confirm your choice</div>
+              <div class="next-desc">After you reach out, a Cargoz agent verifies availability and sends you a detailed breakdown.</div>
+              <div class="next-timing">Within 30 minutes</div>
+            </div>
+          </div>
+          <div class="next-item">
+            <div class="next-num">2</div>
+            <div>
+              <div class="next-title">Site visit &amp; sign off</div>
+              <div class="next-desc">Visit the warehouse, review the space, and sign the rental agreement.</div>
+              <div class="next-timing">Within 1–2 business days</div>
+            </div>
+          </div>
+          <div class="next-item">
+            <div class="next-num">3</div>
+            <div>
+              <div class="next-title">Move your goods in</div>
+              <div class="next-desc">The warehouse team will coordinate your move-in date and handle the handover.</div>
+              <div class="next-timing">On your agreed date</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content-area -->
+</body>
+</html>

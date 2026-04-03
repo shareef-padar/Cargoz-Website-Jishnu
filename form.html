@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Details — Cargoz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ── Page layout ──────────────────────────────────────────── */
+    .form-page {
+      min-height: calc(100vh - 64px - 57px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--spacing-48) var(--spacing-24) var(--spacing-64);
+    }
+
+    .form-wrap {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-16);
+    }
+
+    /* ── Main form card ───────────────────────────────────────── */
+    .form-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-text-100);
+      border-radius: 20px;
+      padding: var(--spacing-32);
+    }
+
+    .form-card__header {
+      text-align: center;
+      margin-bottom: var(--spacing-24);
+    }
+
+    .form-card__title {
+      font-family: 'Gilroy', 'Lato', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text-800);
+      margin-bottom: var(--spacing-6);
+    }
+
+    .form-card__subtitle {
+      font-size: 14px;
+      color: var(--color-text-500);
+      line-height: 1.5;
+    }
+
+    /* ── Section divider ──────────────────────────────────────── */
+    .form-section-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      margin-bottom: var(--spacing-16);
+    }
+
+    .form-section-label::before,
+    .form-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-text-100);
+    }
+
+    .form-section-label span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--color-text-400);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ── Form fields ──────────────────────────────────────────── */
+    .form-fields {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-12);
+      margin-bottom: var(--spacing-20);
+    }
+
+    .form-input {
+      width: 100%;
+      height: 52px;
+      padding: 0 var(--spacing-16);
+      font-family: 'Lato', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--color-text-800);
+      background: var(--color-white);
+      border: 1.5px solid var(--color-text-200);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-input::placeholder { color: var(--color-text-400); }
+
+    .form-input:focus {
+      border-color: var(--color-primary-400);
+      box-shadow: 0 0 0 3px var(--color-primary-50);
+    }
+
+    /* Phone input wrapper */
+    .phone-input-wrap {
+      position: relative;
+    }
+
+    .phone-prefix {
+      position: absolute;
+      left: var(--spacing-16);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-700);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .form-input--phone {
+      padding-left: 56px;
+    }
+
+    /* ── CTA button ───────────────────────────────────────────── */
+    .btn--form-cta {
+      width: 100%;
+      height: 52px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 14px;
+      background: var(--color-primary-500);
+      color: var(--color-white);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-8);
+      transition: opacity 0.15s, transform 0.1s;
+      font-family: 'Lato', sans-serif;
+    }
+
+    .btn--form-cta:hover { opacity: 0.9; }
+    .btn--form-cta:active { transform: scale(0.98); }
+
+    .form-card__note {
+      text-align: center;
+      font-size: 13px;
+      color: var(--color-text-400);
+      margin-top: var(--spacing-12);
+    }
+
+    /* ── Call card ────────────────────────────────────────────── */
+    .call-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-text-100);
+      border-radius: 20px;
+      padding: var(--spacing-24);
+    }
+
+    .call-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-text-800);
+      margin-bottom: var(--spacing-12);
+    }
+
+    .call-card__row {
+      display: flex;
+      gap: var(--spacing-8);
+      margin-bottom: var(--spacing-8);
+    }
+
+    .call-card__input {
+      flex: 1;
+      height: 44px;
+      padding: 0 var(--spacing-16);
+      font-family: 'Lato', sans-serif;
+      font-size: 14px;
+      color: var(--color-text-800);
+      background: var(--color-text-50);
+      border: 1.5px solid var(--color-text-100);
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .call-card__input::placeholder { color: var(--color-text-400); }
+
+    .call-card__input:focus {
+      border-color: var(--color-primary-400);
+      box-shadow: 0 0 0 3px var(--color-primary-50);
+      background: var(--color-white);
+    }
+
+    .btn--call {
+      height: 44px;
+      padding: 0 var(--spacing-20);
+      background: var(--color-secondary-600);
+      color: var(--color-white);
+      font-family: 'Lato', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+
+    .btn--call:hover { opacity: 0.9; }
+
+    .call-card__note {
+      font-size: 12px;
+      color: var(--color-text-400);
+    }
+
+    /* ── WhatsApp link ────────────────────────────────────────── */
+    .wa-link {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-12);
+      text-decoration: none;
+      padding: var(--spacing-16) var(--spacing-24);
+      border-radius: 20px;
+      transition: background 0.15s;
+    }
+
+    .wa-link:hover { background: var(--color-text-50); }
+
+    .wa-link__icon {
+      width: 40px;
+      height: 40px;
+      background: #25D366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .wa-link__text {}
+
+    .wa-link__title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #25D366;
+    }
+
+    .wa-link__sub {
+      font-size: 13px;
+      color: var(--color-text-500);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════════════════ -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__logo" aria-label="Cargoz home">
+      <div class="navbar__logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 14L10 4L17 14H3Z" fill="white" opacity="0.9"/>
+          <path d="M6 14H14V17H6V14Z" fill="white"/>
+        </svg>
+      </div>
+      <span class="navbar__logo-text">Cargoz</span>
+    </a>
+    <nav class="navbar__nav">
+      <a href="#" class="navbar__link">Services</a>
+      <a href="#" class="navbar__link">Location</a>
+      <a href="#" class="navbar__link">How Cargoz Helps</a>
+      <a href="#" class="navbar__link">Blog</a>
+      <a href="#" class="navbar__link">Login</a>
+    </nav>
+    <div class="navbar__actions">
+      <a href="#" class="btn btn--primary">Book a Warehouse</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PROGRESS STEPPER
+═══════════════════════════════════════════════════════════════ -->
+<div class="stepper" role="navigation" aria-label="Booking progress">
+  <div class="stepper__inner">
+    <div class="step step--done">
+      <div class="step__circle"></div>
+      <span class="step__label">Find Warehouses</span>
+    </div>
+    <div class="step__connector step__connector--done"></div>
+    <div class="step step--active">
+      <div class="step__circle"><span>2</span></div>
+      <span class="step__label">Your Details</span>
+    </div>
+    <div class="step__connector"></div>
+    <div class="step step--inactive">
+      <div class="step__circle"><span>3</span></div>
+      <span class="step__label">Get Your Estimate</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FORM PAGE
+═══════════════════════════════════════════════════════════════ -->
+<main class="form-page">
+  <div class="form-wrap">
+
+    <!-- Back link -->
+    <a href="compare.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Go back
+    </a>
+
+    <!-- Main form card -->
+    <div class="form-card">
+      <div class="form-card__header">
+        <div class="form-card__title" id="form-title">Get Free Comparison</div>
+        <div class="form-card__subtitle" id="form-subtitle">Side-by-side cost breakdown for 3 warehouses</div>
+      </div>
+
+      <div class="form-section-label"><span>Your Details</span></div>
+
+      <form class="form-fields" id="details-form" novalidate>
+        <input
+          type="text"
+          class="form-input"
+          placeholder="Full name"
+          autocomplete="name"
+          required
+        />
+        <input
+          type="text"
+          class="form-input"
+          placeholder="Business name"
+          autocomplete="organization"
+        />
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">+971</span>
+          <input
+            type="tel"
+            class="form-input form-input--phone"
+            placeholder="50 123 4567"
+            autocomplete="tel"
+            required
+          />
+        </div>
+      </form>
+
+      <button class="btn--form-cta" id="form-cta" onclick="handleSubmit()">
+        <i class="ph ph-arrow-right"></i>
+        <span id="cta-label">Get Free Comparison</span>
+      </button>
+
+      <p class="form-card__note">No payment required</p>
+    </div>
+
+    <!-- Prefer a call? -->
+    <div class="call-card">
+      <div class="call-card__title">Prefer a call?</div>
+      <div class="call-card__row">
+        <input
+          type="tel"
+          class="call-card__input"
+          placeholder="+971 50 123 4567"
+          autocomplete="tel"
+        />
+        <button class="btn--call">Call me</button>
+      </div>
+      <div class="call-card__note">We'll call within 30 minutes</div>
+    </div>
+
+    <!-- Chat on WhatsApp -->
+    <a href="#" class="wa-link">
+      <div class="wa-link__icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.938-1.418A9.954 9.954 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm4.93 13.57c-.208.585-1.227 1.12-1.685 1.162-.458.042-.89.205-2.986-.622-2.53-.993-4.15-3.582-4.275-3.748-.126-.167-1.026-1.364-1.026-2.602 0-1.238.648-1.847.878-2.1.23-.25.5-.313.668-.313l.48.009c.154.007.36-.058.563.43.208.5.707 1.728.768 1.854.062.125.104.27.02.434-.083.165-.125.267-.25.41l-.375.437c-.124.138-.254.287-.11.564.146.278.646 1.065 1.388 1.722.954.848 1.758 1.11 2.036 1.236.278.125.44.104.602-.063.167-.167.708-.833.896-1.118.188-.285.375-.237.63-.143.256.094 1.624.766 1.902.906.278.14.463.208.531.323.07.115.07.667-.138 1.252z"/>
+        </svg>
+      </div>
+      <div class="wa-link__text">
+        <div class="wa-link__title">Need help deciding?</div>
+        <div class="wa-link__sub">Chat on WhatsApp</div>
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<script>
+  // Read ?type= param and update copy
+  const params = new URLSearchParams(window.location.search);
+  const type = params.get('type'); // 'comparison' or 'single'
+
+  if (type === 'single') {
+    document.getElementById('form-title').textContent = 'Get Your Estimate';
+    document.getElementById('form-subtitle').textContent = 'Your personalised warehouse cost breakdown';
+    document.getElementById('cta-label').textContent = 'Get My Estimate';
+  }
+
+  function handleSubmit() {
+    // Navigate to estimate page (pass type for future use)
+    window.location.href = 'estimate.html';
+  }
+</script>
+
+</body>
+</html>
